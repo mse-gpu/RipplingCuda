@@ -5,10 +5,8 @@
 
 extern void launchMandelBrot(void);
 
-int main(void)
-    {
-    if (nbDeviceDetect() >= 1)
-	{
+int main(void){
+    if (nbDeviceDetect() >= 1){
 	int deviceId = 0;
 
 	HANDLE_ERROR(cudaSetDevice(deviceId)); // active gpu of deviceId
@@ -17,9 +15,7 @@ int main(void)
 	launchMandelBrot();
 
 	return EXIT_SUCCESS;
-	}
-    else
-	{
+    } else {
 	return EXIT_FAILURE;
-	}
     }
+}
