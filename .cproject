@@ -79,7 +79,7 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="Hello.null.934648720" name="Hello"/>
+		<project id="OpenMP.null.2001519557" name="OpenMP"/>
 	</storageModule>
 	<storageModule moduleId="refreshScope" versionNumber="1">
 		<resource resourceType="PROJECT" workspacePath="/Cuda"/>
