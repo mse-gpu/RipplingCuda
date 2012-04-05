@@ -3,6 +3,7 @@
 #include "ColorTools_Device.h"
 
 __global__ static void kernelAnimationHSB(uchar4* ptrDevPixels, int w, int h, float t);
+__global__ static void kernelAnimationHSBBench(int w, int h, float t);
 
 __device__ static float color(int w, int h, float x, float y, float t);
 __device__ static float d(int w, int h, float x, float y);
@@ -12,6 +13,13 @@ void useKernelAnimationHSB(uchar4* ptrDevPixels, int w, int h, float t){
     dim3 threadPerBlock = dim3(16, 16, 1);
 
     kernelAnimationHSB<<<blockPerGrid,threadPerBlock>>>(ptrDevPixels, w, h, t);
+}
+
+void useKernelAnimationHSBBench(int w, int h, float t){
+    dim3 blockPerGrid = dim3(32, 32, 1);
+    dim3 threadPerBlock = dim3(16, 16, 1);
+
+    kernelAnimationHSBBench<<<blockPerGrid,threadPerBlock>>>(w, h, t);
 }
 
 __global__ static void kernelAnimationHSB(uchar4* ptrDevPixels, int w, int h, float t){
@@ -36,6 +44,28 @@ __global__ static void kernelAnimationHSB(uchar4* ptrDevPixels, int w, int h, fl
 	ptrDevPixels[tid].y = c;
 	ptrDevPixels[tid].z = c;
 	ptrDevPixels[tid].w = 255;
+
+	tid += nbThreadCuda;
+    }
+}
+
+__global__ static void kernelAnimationHSBBench(int w, int h, float t){
+    int i = threadIdx.y + blockIdx.y * blockDim.y;
+    int j = threadIdx.x + blockIdx.x * blockDim.x;
+
+    int nbThreadY = gridDim.y * blockDim.y;
+    int nbThreadX = gridDim.x * blockDim.x;
+    int nbThreadCuda = nbThreadY * nbThreadX;
+
+    int tid = j +  (i * nbThreadX);
+    int pixelI;
+    int pixelJ;
+
+    while(tid < (w * h)){
+	pixelI = tid / w;
+	pixelJ = tid - w * pixelI;
+
+	float c = color(w, h, pixelI, pixelJ, t);
 
 	tid += nbThreadCuda;
     }
