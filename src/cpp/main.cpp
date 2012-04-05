@@ -9,10 +9,10 @@
 #include "deviceTools.h"
 
 int launchApplication(int argc, char** argv);
-int bench();
+int bench(int argc, char** argv);
 
 int main(int argc, char** argv){
-    return bench();
+    return bench(argc, argv);
     //return launchApplication(argc, argv);
 }
 
@@ -45,26 +45,49 @@ int launchApplication(int argc, char** argv){
         }
 }
 
-#define DIM_BENCH 500000
+#define DIM_BENCH 250000
 
-extern void useKernelAnimationHSBBench(int w, int h, float t);
+extern void useKernelAnimationHSBBench(int* fake, int w, int h, float t);
 
-int bench(){
+int bench(int argc, char** argv){
     std::cout << "Launch benchmark" << std::endl;
 
     if (nbDeviceDetect() >= 1){
-    	int deviceId = 2;
+    	int deviceId = 1;
 
     	HANDLE_ERROR(cudaSetDevice(deviceId)); // active gpu of deviceId
     	HANDLE_ERROR(cudaSetDeviceFlags(cudaDeviceMapHost)); // Not all gpu allow the use of mapMemory (avant prremier appel au kernel)
-    	HANDLE_ERROR(cudaGLSetGLDevice(deviceId));
 
-        ChronoOMPs chronos;
-        chronos.start();
+    	//Force the driver to run
+    	int* fake;
+    	HANDLE_ERROR(cudaMalloc((void**) &fake, sizeof(int)));
 
-    	useKernelAnimationHSBBench(DIM_BENCH, DIM_BENCH, 1);
+    	std::cout << "End of malloc" << std::endl;
 
-        chronos.print("CUDA Version");
+    	CUevent start;
+    	CUevent stop;
+    	CUevent test;
+    	HANDLE_ERROR(cudaEventCreate(&start, CU_EVENT_DEFAULT));
+    	HANDLE_ERROR(cudaEventCreate(&stop, CU_EVENT_DEFAULT));
+    	HANDLE_ERROR(cudaEventCreate(&test, CU_EVENT_DEFAULT));
+    	HANDLE_ERROR(cudaEventRecord(start));
+
+        useKernelAnimationHSBBench(fake, DIM_BENCH, DIM_BENCH, 1);
+
+        float elapsed = 0;
+    	HANDLE_ERROR(cudaEventRecord(test));
+        HANDLE_ERROR(cudaEventSynchronize(test));
+    	HANDLE_ERROR(cudaEventRecord(stop));
+        HANDLE_ERROR(cudaEventSynchronize(stop));
+    	HANDLE_ERROR(cudaEventElapsedTime(&elapsed, start, stop));
+
+        std::cout << "CUDA Version took " << elapsed << "ms" << std::endl;
+
+    	HANDLE_ERROR(cudaEventDestroy(start));
+    	HANDLE_ERROR(cudaEventDestroy(stop));
+    	HANDLE_ERROR(cudaEventDestroy(test));
+
+    	HANDLE_ERROR(cudaFree(fake));
 
     	return EXIT_SUCCESS;
     } else {
