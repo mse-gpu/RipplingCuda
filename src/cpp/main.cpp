@@ -45,9 +45,9 @@ int launchApplication(int argc, char** argv){
         }
 }
 
-#define DIM_BENCH 250000
+#define DIM_BENCH 30000
 
-extern void useKernelAnimationHSBBench(int* fake, int w, int h, float t);
+extern void useKernelAnimationHSB(uchar4* ptrDevPixels, int w, int h, float t);
 
 int bench(int argc, char** argv){
     std::cout << "Launch benchmark" << std::endl;
@@ -62,21 +62,23 @@ int bench(int argc, char** argv){
     	int* fake;
     	HANDLE_ERROR(cudaMalloc((void**) &fake, sizeof(int)));
 
+    	uchar4* image;
+    	HANDLE_ERROR(cudaMalloc(&image, DIM_BENCH * DIM_BENCH * sizeof(uchar4)));
+
     	std::cout << "End of malloc" << std::endl;
+    	std::cout << "Size of the image: " << (DIM_BENCH * DIM_BENCH * sizeof(uchar4)) << std::endl;
 
     	CUevent start;
     	CUevent stop;
-    	CUevent test;
     	HANDLE_ERROR(cudaEventCreate(&start, CU_EVENT_DEFAULT));
     	HANDLE_ERROR(cudaEventCreate(&stop, CU_EVENT_DEFAULT));
-    	HANDLE_ERROR(cudaEventCreate(&test, CU_EVENT_DEFAULT));
     	HANDLE_ERROR(cudaEventRecord(start));
 
-        useKernelAnimationHSBBench(fake, DIM_BENCH, DIM_BENCH, 1);
+    	for(int i = 0; i < 10; ++i){
+            useKernelAnimationHSB(image, DIM_BENCH, DIM_BENCH, 1);
+    	}
 
         float elapsed = 0;
-    	HANDLE_ERROR(cudaEventRecord(test));
-        HANDLE_ERROR(cudaEventSynchronize(test));
     	HANDLE_ERROR(cudaEventRecord(stop));
         HANDLE_ERROR(cudaEventSynchronize(stop));
     	HANDLE_ERROR(cudaEventElapsedTime(&elapsed, start, stop));
@@ -85,8 +87,8 @@ int bench(int argc, char** argv){
 
     	HANDLE_ERROR(cudaEventDestroy(start));
     	HANDLE_ERROR(cudaEventDestroy(stop));
-    	HANDLE_ERROR(cudaEventDestroy(test));
 
+    	HANDLE_ERROR(cudaFree(image));
     	HANDLE_ERROR(cudaFree(fake));
 
     	return EXIT_SUCCESS;
