@@ -45,7 +45,7 @@ int launchApplication(int argc, char** argv){
         }
 }
 
-#define DIM_BENCH 30000
+#define DIM_BENCH 10000
 
 extern void useKernelAnimationHSB(uchar4* ptrDevPixels, int w, int h, float t);
 
@@ -72,14 +72,14 @@ int bench(int argc, char** argv){
     	CUevent stop;
     	HANDLE_ERROR(cudaEventCreate(&start, CU_EVENT_DEFAULT));
     	HANDLE_ERROR(cudaEventCreate(&stop, CU_EVENT_DEFAULT));
-    	HANDLE_ERROR(cudaEventRecord(start));
+    	HANDLE_ERROR(cudaEventRecord(start, 0));
 
     	for(int i = 0; i < 10; ++i){
             useKernelAnimationHSB(image, DIM_BENCH, DIM_BENCH, 1);
     	}
 
         float elapsed = 0;
-    	HANDLE_ERROR(cudaEventRecord(stop));
+    	HANDLE_ERROR(cudaEventRecord(stop, 0));
         HANDLE_ERROR(cudaEventSynchronize(stop));
     	HANDLE_ERROR(cudaEventElapsedTime(&elapsed, start, stop));
 
